@@ -30,6 +30,45 @@
     console.log('tourney intialized, configuration:', this);
   }
 
+  //just for the tournament header?
+  Tournament.prototype.render = function(){
+    var self = this;
+
+    var source = $('#tournament-header-template').html();
+    var template = Handlebars.compile(source);
+    var context = {
+      level : self.level,
+      handsLeft : self.levelLength - self.levelHandCount,
+      wager : self.wager,
+      players : self.numberOfActivePlayers,
+      averageStack : ((self.numberOfInitialPlayers * self.intitialStack) / self.numberOfActivePlayers).toFixed(2)
+    }
+    var html = template(context);
+    console.log('handlebars html', html);
+    $('#tournament-header').append(html);
+
+  }
+
+  Tournament.prototype.init = function(){
+    var self = this;
+
+    //data fetch is ajax, so wait until data is fetched before doing the rest...
+    self.fetchPlayerData(function(data){
+      self.setBettingStructure();
+      self.levelUp();
+      self.generatePlayerList(data);
+      self.updatePlayerCounts();
+      self.createTables();
+      self.updateEmptiestTables();
+      self.seatUnseatedPlayers();
+      self.assignChipStacks();
+      self.render();
+
+      //ready for first hand
+      //load tables (tournament info + 1 for each table)
+    })
+  }
+
   Tournament.prototype.setBettingStructure = function () {
     var type = this.bettingStructureType;
     var self = this;
@@ -174,23 +213,15 @@
     }
   }
 
-  Tournament.prototype.init = function(){
+  Tournament.prototype.assignChipStacks = function() {
     var self = this;
 
-    //data fetch is ajax, so wait until data is fetched before doing the rest...
-    self.fetchPlayerData(function(data){
-      self.setBettingStructure();
-      self.levelUp();
-      self.generatePlayerList(data);
-      self.updatePlayerCounts();
-      self.createTables();
-      self.updateEmptiestTables();
-      self.seatUnseatedPlayers();
-      //seat the players evenly
-          //divvy up in sets
-          //randomly seat at table (table function)
-    })
+    self.activePlayers.forEach(function(player){
+      player.chips = self.intitialStack;
+    });
+    console.log('chips assigned');
   }
+
 
   module.Tournament = Tournament;
 

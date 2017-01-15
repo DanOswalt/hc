@@ -8,18 +8,46 @@
     </head>
     <body>
 
-    <header>
-      <h4>Hi Card Tourney</h4>
-    </header>
-
-    <table class='table'>
-
-    </table>
-
-    <div class='container'>
+    <div id="tournament-header">
     </div>
 
+    <!-- tournament line -->
+    <script id="tournament-header-template" type="text/x-handlebars-template">
+      <table id="tournament-info" class="table">
+        <thead>
+          <tr>
+            <th>HCT</th>
+            <th>Level</th>
+            <th>Hands Left</th>
+            <th>Wager</th>
+            <th>Players</th>
+            <th>Avg Stack</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"></td>
+            <td>{{level}}</td>
+            <td>{{handsLeft}}</td>
+            <td>{{wager}}</td>
+            <td>{{players}}</td>
+            <td>{{averageStack}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </script>
+
+
+    <!-- each table -->
+    <script id="tables-template">
+
+
+    </script>
+
+
+
     <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script src="node_modules/handlebars/dist/handlebars.js"></script>
     <script src="js/Utilities.js"></script>
     <script src="js/Table.js"></script>
     <script src="js/Player.js"></script>
