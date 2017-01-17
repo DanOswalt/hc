@@ -31,21 +31,32 @@
   }
 
   //just for the tournament header?
-  Tournament.prototype.render = function(){
+  Tournament.prototype.updateViews = function(){
     var self = this;
 
-    var source = $('#tournament-header-template').html();
-    var template = Handlebars.compile(source);
-    var context = {
+    var tourneyInfoSource = $('#tournament-header-template').html();
+    var gametablesSource = $("#gametables-template").html();
+    var tourneyInfoTemplate = Handlebars.compile(tourneyInfoSource);
+    var gametablesTemplate = Handlebars.compile(gametablesSource);
+    console.log(gametablesSource);
+    var tourneyInfoContext = {
       level : self.level,
       handsLeft : self.levelLength - self.levelHandCount,
       wager : self.wager,
       players : self.numberOfActivePlayers,
       averageStack : ((self.numberOfInitialPlayers * self.intitialStack) / self.numberOfActivePlayers).toFixed(2)
     }
-    var html = template(context);
-    console.log('handlebars html', html);
-    $('#tournament-header').append(html);
+    var gametablesContext = {
+      gametables: self.tables
+    }
+    var tourneyInfoHTML = tourneyInfoTemplate(tourneyInfoContext);
+    var gametablesHTML = gametablesTemplate(gametablesContext);
+
+    console.log(gametablesHTML);
+
+    $('#tournament-header').append(tourneyInfoHTML);
+    $('#gametables').append(gametablesHTML);
+
 
   }
 
@@ -62,7 +73,7 @@
       self.updateEmptiestTables();
       self.seatUnseatedPlayers();
       self.assignChipStacks();
-      self.render();
+      self.updateViews();
 
       //ready for first hand
       //load tables (tournament info + 1 for each table)
