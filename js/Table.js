@@ -19,6 +19,7 @@
     this.occupiedSeats = [];
     this.deck = [];
     this.revealHands = true; //make false
+    this.orderOfPlay = [1, 2, 3, 4, 5, 6];
   }
 
   Table.prototype.buildNewDeck = function() {
@@ -43,7 +44,7 @@
     }//ranks
   }//deck
 
-  Table.prototype.dealCards = function(tourney) {
+  Table.prototype.dealCards = function(tourney, next) {
     var self = this;
     var delay = Util.randomBetween(500,1000);
 
@@ -57,8 +58,27 @@
 
     //this is wonky, but not sure how to handle async page rendering
     setTimeout(function(){
-      self.renderFinished = true;
-    }, self.occupiedSeats.length * (delay * 2)) //
+      next(tourney);
+    }, self.occupiedSeats.length * delay)
+  }
+
+  Table.prototype.getOrderOfPlay = function() {
+    var self = this;
+    var seatsInPlay = self.occupiedSeats.map(function(seat){
+      return seat.occupant === null ? 0 : seat.seatId;
+    }).filter(function(id){
+      return id > 0
+    })
+    var begin = seatsInPlay.splice(self.blindSeat - 1);
+    var orderOfPlay = begin.concat(seatsInPlay);
+
+    return orderOfPlay;
+  }
+
+  Table.prototype.getPlayerDecisions = function(t) {
+    var self = this;
+    var orderOfPlay = self.getOrderOfPlay();
+    console.log(self.tableId + ": " + orderOfPlay);
   }
 
   Table.prototype.init = function() {
@@ -66,14 +86,26 @@
     this.setBlindAndActiveSeats();
   }
 
-  Table.prototype.playHand = function(tourney) {
+  Table.prototype.playHand = function(t) {
     var self = this;
     self.rotateBlinds();
     self.buildNewDeck();
     self.deck = Util.shuffle(self.deck);
 
-    //animation:
-    self.dealCards(tourney);
+    //animations:
+    self.dealCards(t, function(t){
+      self.getPlayerDecisions(t, function(t){
+        // self.putChipsInPots(t, function(){
+        //   self.revealHands(t, function(){
+        //     self.resolvePots(t, function(){
+        //       self.showWinners(t, function(){
+        //         console.log('winners');
+        //       })
+        //     })
+        //   })
+        // })
+      })
+    })
 
     //animation
       //get in/out
@@ -139,6 +171,7 @@
       seat.isBlindSeat = seat.is(self.blindSeat);
     });
   }
+
 
   Table.prototype.updateSeatCounts = function() {
     var self = this;
