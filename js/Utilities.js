@@ -7,7 +7,6 @@
   }
 
   Utilities.shuffle = function(array) {
-    console.log('shuffle this array:', array);
     var counter = array.length;
 
     // While there are elements in the array

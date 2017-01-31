@@ -3,7 +3,7 @@
   var app = {};
 
   app.tourney = new Tournament({
-    numberOfInitialPlayers : 18,
+    numberOfInitialPlayers : 24,
     intitialStack : 3,
     levelLength : 10,
     bettingStructureType : 'normal',

@@ -3,3 +3,49 @@ body {
   color: #e5f299;
   font-family: courier;
 }
+
+table {
+  background: #791;
+}
+
+thead {
+  background: #111;
+}
+
+#tournament-header thead {
+  background: #111;
+}
+
+#tournament-header table {
+  background: #510;
+}
+
+#tournament-header-table {
+  position: fixed;
+}
+
+.title-row {
+  background: #222 !important;
+  width: 100%;
+}
+
+.gametable-container {
+  margin: 0 300px;
+}
+
+.gametable-body {
+  color: #111;
+}
+
+.gametable-header {
+  color: #e5f299;
+}
+
+.gametable-title {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.gametable-seats {
+  padding-top: 0 !important;
+}

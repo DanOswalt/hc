@@ -10,10 +10,11 @@
     this.humanPlayer = new Player({
       name: opts.humanPlayer.name,
       bettingStyle: opts.humanPlayer.bettingStyle,
-      human: true
+      human: true,
+      revealHand: true
     });
-    this.bettingStructure = {};
     this.hand = 0;
+    this.bettingStructure = {};
     this.level = 0;
     this.levelHandCount = 0;
     this.wager = 0;
@@ -26,101 +27,28 @@
     this.numberOfActivePlayers;
     this.numberOfFinishedPlayers;
     this.numberOfTables = 0;
-
-    console.log('tourney intialized, configuration:', this);
   }
 
-  //just for the tournament header?
-  Tournament.prototype.updateViews = function(){
+  Tournament.prototype.assignChipStacks = function() {
     var self = this;
 
-    var tourneyInfoSource = $('#tournament-header-template').html();
-    var gametablesSource = $("#gametables-template").html();
-    var tourneyInfoTemplate = Handlebars.compile(tourneyInfoSource);
-    var gametablesTemplate = Handlebars.compile(gametablesSource);
-    console.log(gametablesSource);
-    var tourneyInfoContext = {
-      level : self.level,
-      handsLeft : self.levelLength - self.levelHandCount,
-      wager : self.wager,
-      players : self.numberOfActivePlayers,
-      averageStack : ((self.numberOfInitialPlayers * self.intitialStack) / self.numberOfActivePlayers).toFixed(2)
-    }
-    var gametablesContext = {
-      gametables: self.tables
-    }
-    var tourneyInfoHTML = tourneyInfoTemplate(tourneyInfoContext);
-    var gametablesHTML = gametablesTemplate(gametablesContext);
-
-    console.log(gametablesHTML);
-
-    $('#tournament-header').append(tourneyInfoHTML);
-    $('#gametables').append(gametablesHTML);
-
-
+    self.activePlayers.forEach(function(player){
+      player.chips = self.intitialStack;
+    });
   }
 
-  Tournament.prototype.init = function(){
+  Tournament.prototype.createTables = function() {
     var self = this;
-
-    //data fetch is ajax, so wait until data is fetched before doing the rest...
-    self.fetchPlayerData(function(data){
-      self.setBettingStructure();
-      self.levelUp();
-      self.generatePlayerList(data);
-      self.updatePlayerCounts();
-      self.createTables();
-      self.updateEmptiestTables();
-      self.seatUnseatedPlayers();
-      self.assignChipStacks();
-      self.updateViews();
-
-      //ready for first hand
-      //load tables (tournament info + 1 for each table)
-    })
-  }
-
-  Tournament.prototype.setBettingStructure = function () {
-    var type = this.bettingStructureType;
-    var self = this;
-
-    switch (type) {
-      case 'normal':
-        this.bettingStructure = [
-          1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 22, 26, 32, 40, 50, 72, 100
-        ]
-        console.log('Betting structure initialized:', this.bettingStructure);
-        break;
-      default:
-        console.log('invalid level structure:', type);
-        this.bettingStructure = [];
-        break;
+    var tablesNeeded = self.getNumberOfNeededTables();
+    for (var i = 0; i < tablesNeeded; i += 1) {
+      randomSeat = Util.randomBetween(0, 5);
+      self.tables.push(new Table({
+        tableId : i + 1
+      }))
+      self.tables[i].init();
     }
+    self.setNumberOfTables();
   }
-
-  Tournament.prototype.setNewWager = function (){
-    var levelIndex = this.level - 1
-    this.wager = this.bettingStructure[levelIndex];
-    console.log('New wager:', this.wager);
-  }
-
-  Tournament.prototype.setNewLevel = function () {
-    this.level += 1;
-    console.log('New level:', this.level);
-  }
-
-  Tournament.prototype.resetLevelHandCount = function () {
-    this.levelHandCount = 1;
-    console.log('Hand Count Reset');
-  }
-
-  Tournament.prototype.levelUp = function () {
-    console.log('Level up!...');
-    this.resetLevelHandCount();
-    this.setNewLevel();
-    this.setNewWager();
-  }
-
 
   Tournament.prototype.fetchPlayerData = function(next) {
     //get the player data
@@ -141,7 +69,8 @@
       return new Player({
         name: player.name,
         bettingStyle: player.bettingStyle,
-        human: false
+        human: false,
+        revealHand: false
       })
     })
 
@@ -163,34 +92,89 @@
     //copy to active player list and unseated players list
     self.activePlayers = self.allInitialPlayers.slice();
     self.unseatedPlayers = self.allInitialPlayers.slice();
-
-    console.log('Tournament player list:', self.activePlayers);
   }
 
   Tournament.prototype.getNumberOfNeededTables = function(){
     return Math.ceil(this.numberOfActivePlayers / 6);
-    console.log('Tables needed:', tablesNeeded);
   }
 
-  Tournament.prototype.updatePlayerCounts = function(){
-    this.numberOfActivePlayers = this.activePlayers.length;
-    this.numberOfFinishedPlayers = this.finishedPlayers.length;
-    console.log('Updated Remaining Players Count:', this.numberOfActivePlayers);
-    console.log('Updated Finished Players Count:', this.numberOfFinishedPlayers);
-  }
-
-  Tournament.prototype.createTables = function() {
+  Tournament.prototype.init = function(){
     var self = this;
-    var tablesNeeded = self.getNumberOfNeededTables();
-    for (var i = 0; i < tablesNeeded; i += 1) {
-      self.tables.push(new Table({
-        tableId : i + 1,
-        blindSeat : Util.randomBetween(0, 5)
-      }))
-      self.tables[i].init();
-    }
-    console.log('New Tables:', self.tables);
+
+    //data fetch is ajax, so wait until data is fetched before doing the rest...
+    self.fetchPlayerData(function(data){
+      self.setBettingStructure();
+      self.levelUp();
+      self.generatePlayerList(data);
+      self.updatePlayerCounts();
+      self.createTables(); //console.log('ran createTables.', self);
+      self.updateEmptiestTables(); //console.log('ran emptiestTables.', self);
+      self.seatUnseatedPlayers(); //console.log('ran seatUnseatedPlayers.', self);
+      self.assignChipStacks(); //console.log('tourney before view loads.', self);
+      self.startGameLoop(); //console.log('gameloop finished.', self);
+
+      //ready for first hand
+      //load tables (tournament info + 1 for each table)
+    })
   }
+
+  Tournament.prototype.levelUp = function () {
+    this.resetLevelHandCount();
+    this.setNewLevel();
+    this.setNewWager();
+  }
+
+  Tournament.prototype.resetLevelHandCount = function () {
+    this.levelHandCount = 1;
+  }
+
+  Tournament.prototype.seatUnseatedPlayers = function () {
+    var self = this;
+    var count = self.unseatedPlayers.length;
+
+    for (var i = 0; i < count; i += 1){
+      self.emptiestTables = Util.shuffle(self.emptiestTables);
+      self.emptiestTables[0].seatPlayer(self.unseatedPlayers.pop());
+      self.updateEmptiestTables();
+    }
+  }
+
+  Tournament.prototype.setBettingStructure = function () {
+    var type = this.bettingStructureType;
+    var self = this;
+
+    switch (type) {
+      case 'normal':
+        this.bettingStructure = [
+          1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 22, 26, 32, 40, 50, 72, 100
+        ]
+        break;
+      default:
+        this.bettingStructure = [];
+        break;
+    }
+  }
+
+  Tournament.prototype.setNewLevel = function () {
+    this.level += 1;
+  }
+
+  Tournament.prototype.setNewWager = function (){
+    var levelIndex = this.level - 1
+    this.wager = this.bettingStructure[levelIndex];
+  }
+
+  Tournament.prototype.setNumberOfTables = function () {
+    this.numberOfTables = this.tables.length;
+  }
+
+  Tournament.prototype.startGameLoop = function () {
+    var self = this;
+    self.tables.forEach(function(table){
+      table.playHand(self);
+      self.updateViews();
+    });
+  };
 
   Tournament.prototype.updateEmptiestTables = function () {
     var self = this;
@@ -205,34 +189,39 @@
     self.emptiestTables = self.tables.filter(function(table){
       return table.emptySeatCount === max;
     });
-
-    console.log('max empty seat count:', max);
-    console.log('emptiest tables:', self.emptiestTables);
   }
 
-  Tournament.prototype.seatUnseatedPlayers = function () {
-    var self = this;
-    var count = self.unseatedPlayers.length;
+  Tournament.prototype.updatePlayerCounts = function(){
+    this.numberOfActivePlayers = this.activePlayers.length;
+    this.numberOfFinishedPlayers = this.finishedPlayers.length;
+  }
 
-    for (var i = 0; i < count; i += 1){
-      self.emptiestTables = Util.shuffle(self.emptiestTables);
-      self.emptiestTables[0].seatPlayer(self.unseatedPlayers.pop());
-      self.updateEmptiestTables();
-      console.log('Unseated Players index:', i);
-      console.log('Unseated players:', self.unseatedPlayers);
-      console.log('Unseated count:', self.unseatedPlayers.length);
+  Tournament.prototype.updateViews = function(){
+    var self = this;
+
+    var tourneyInfoSource = $('#tournament-header-template').html();
+    var gametablesSource = $("#gametables-template").html();
+
+    var tourneyInfoTemplate = Handlebars.compile(tourneyInfoSource);
+    var gametablesTemplate = Handlebars.compile(gametablesSource);
+
+    var tourneyInfoContext = {
+      level : self.level,
+      handsLeft : self.levelLength - self.levelHandCount,
+      wager : self.wager,
+      players : self.numberOfActivePlayers,
+      averageStack : ((self.numberOfInitialPlayers * self.intitialStack) / self.numberOfActivePlayers).toFixed(2)
     }
+    var gametablesContext = {
+      gametables: self.tables
+    }
+
+    var tourneyInfoHTML = tourneyInfoTemplate(tourneyInfoContext);
+    var gametablesHTML = gametablesTemplate(gametablesContext);
+
+    $('#tournament-header').empty().append(tourneyInfoHTML);
+    $('#gametables').empty().append(gametablesHTML);
   }
-
-  Tournament.prototype.assignChipStacks = function() {
-    var self = this;
-
-    self.activePlayers.forEach(function(player){
-      player.chips = self.intitialStack;
-    });
-    console.log('chips assigned');
-  }
-
 
   module.Tournament = Tournament;
 

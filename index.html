@@ -8,23 +8,22 @@
     </head>
     <body>
 
-    <div id="tournament-header">
-      <!-- append handlebars template here -->
-      <script id="tournament-header-template" type="text/x-handlebars-template">
-        <table id="tournament-info" class="table">
-          <thead>
-            <tr>
-              <th class="col-sm-1">Tournament Info:</th>
-              <th class="col-sm-1">Level</th>
-              <th class="col-sm-1">Hands Left</th>
-              <th class="col-sm-1">Wager</th>
-              <th class="col-sm-1">Players</th>
-              <th class="col-sm-1">Avg Stack</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row"></td>
+    <!-- append handlebars template here -->
+    <script id="tournament-header-template" type="text/x-handlebars-template">
+      <table id="tournament-info" class="table">
+        <thead>
+          <tr>
+            <th>Tournament Info:</th>
+            <th>Level</th>
+            <th>Hands Left</th>
+            <th>Wager</th>
+            <th>Players</th>
+            <th>Avg Stack</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"></th>
               <td>{{level}}</td>
               <td>{{handsLeft}}</td>
               <td>{{wager}}</td>
@@ -34,17 +33,15 @@
           </tbody>
         </table>
       </script><!-- end template -->
-    </div>
 
-    <div id='gametables'>
       <script id="gametables-template" type="text/x-handlebars-template">
         {{#each gametables}}
         <div class="gametable-container">
 
-          <table class="gametable-header table" >
+          <table class="gametable-title table" >
             <thead>
               <tr>
-                <th>Table {{tableId}}</th>
+                <th class="title-row">Table {{tableId}}</th>
                 <th></th>
                 <th></th>
                 <th></th>
@@ -56,36 +53,42 @@
           </table><!-- header end -->
 
           <table class="gametable-seats table">
-            <thead>
+            <thead class="gametable-header">
               <tr>
-                <th class="col-sm-1">Seat</th>
-                <th class="col-sm-1">Name</th>
-                <th class="col-sm-1">Chips</th>
-                <th class="col-sm-1">Blind</th>
-                <th class="col-sm-1">In/Out</th>
-                <th class="col-sm-1">Action</th>
-                <th class="col-sm-1">Show Hand</th>
-                <th class="col-sm-1">Result</th>
+                <th>Seat</th>
+                <th>Name</th>
+                <th>Chips</th>
+                <th>Blind</th>
+                <th>In/Out</th>
+                <th>Action</th>
+                <th>Show Hand</th>
+                <th>Result</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody class="gametable-body">
               {{#each seats}}
               <tr>
-                <th scope="row">{{id}}</td>
+                <th scope="row">{{seatId}}</th>
                 <td>{{occupant.name}}</td>
                 <td>{{occupant.chips}}</td>
                 {{#if isBlindSeat}}
-                  <td>(blind)</td>
+                <td>(blind)</td>
                 {{else}}
-                  <td></td>
+                <td></td>
                 {{/if}}
                 <td>{{occupant.in}}</td>
                 {{#if isActiveSeat}}
-                  <td>&lt&lt&lt</td>
+                <td>&lt&lt&lt</td>
+                {{else}}
+                <td></td>
+                {{/if}}
+                {{#if occupant.revealHand}}
+                  <td>{{occupant.hand.name}}</td>
+                {{else if occupant.hand}}
+                  <td>[]</td>
                 {{else}}
                   <td></td>
                 {{/if}}
-                <td>{{occupant.hand}}</td>
                 <td>{{occupant.winnings}}</td>
               </tr>
               {{/each}}
@@ -94,14 +97,21 @@
         </div>
         {{/each}}
       </script><!-- end template -->
+
+    <div id="tournament-header">
+    </div>
+
+    <div id='gametables'>
     </div>
 
     <script src="node_modules/jquery/dist/jquery.js"></script>
     <script src="node_modules/handlebars/dist/handlebars.js"></script>
     <script src="js/Utilities.js"></script>
+    <script src="js/Card.js"></script>
     <script src="js/Table.js"></script>
     <script src="js/Player.js"></script>
     <script src="js/Tournament.js"></script>
+    <script src="js/Seat.js"></script>
     <script src="js/app.js"></script>
     </body>
   </html>
