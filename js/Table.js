@@ -19,7 +19,7 @@
     this.occupiedSeats = [];
     this.deck = [];
     this.revealHands = true; //make false
-    this.orderOfPlay = [1, 2, 3, 4, 5, 6];
+    this.indexedOrderOfPlay = [1, 2, 3, 4, 5, 6];
   }
 
   Table.prototype.buildNewDeck = function() {
@@ -48,13 +48,24 @@
     var self = this;
     var delay = Util.randomBetween(500,1000);
 
-    self.occupiedSeats.forEach(function(seat, index){
+    self.getOrderOfPlay();
+    console.log('table ' + self.tableId + ': ' + self.indexedOrderOfPlay);
+    self.indexedOrderOfPlay.forEach(function(index){
+      console.log('table ' + self.tableId + ': ' + index);
       setTimeout(function(){
-        seat.occupant.hand = self.deck.shift();
+        self.occupiedSeats[index].occupant.hand = self.deck.shift()
         tourney.updateViews();
       },
       index * delay);
     });
+
+    // self.occupiedSeats.forEach(function(seat, index){
+    //   setTimeout(function(){
+    //     seat.occupant.hand = self.deck.shift();
+    //     tourney.updateViews();
+    //   },
+    //   index * delay);
+    // });
 
     //this is wonky, but not sure how to handle async page rendering
     setTimeout(function(){
@@ -64,21 +75,22 @@
 
   Table.prototype.getOrderOfPlay = function() {
     var self = this;
-    var seatsInPlay = self.occupiedSeats.map(function(seat){
-      return seat.occupant === null ? 0 : seat.seatId;
+
+    var seatIndicesInPlay = self.occupiedSeats.map(function(seat){
+      return seat.occupant === null ? 0 : seat.seatId - 1;
     }).filter(function(id){
       return id > 0
     })
-    var begin = seatsInPlay.splice(self.blindSeat - 1);
-    var orderOfPlay = begin.concat(seatsInPlay);
 
-    return orderOfPlay;
+    //blind seat should be first, so cut off the list from the blindseat to the end
+    //then stick that back onto the front (splice changes the original array)
+    var begin = seatIndicesInPlay.splice(self.blindSeat - 1);
+    self.indexedOrderOfPlay = begin.concat(seatIndicesInPlay);
   }
 
   Table.prototype.getPlayerDecisions = function(t) {
     var self = this;
-    var orderOfPlay = self.getOrderOfPlay();
-    console.log(self.tableId + ": " + orderOfPlay);
+    console.log(self.seats);
   }
 
   Table.prototype.init = function() {
